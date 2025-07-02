@@ -159,14 +159,14 @@ heatmap_fig.update_layout(
 st.plotly_chart(heatmap_fig, use_container_width=True)
 ### modifications
 # Enhanced Top Tracks Analysis - Fixed Version
-st.subheader(f"Top Tracks Analysis (Top {min(100, len(df_filtered))} Tracks)")
+st.subheader(f"Top Tracks Analysis (Top {min(250, len(df_filtered))} Tracks)")
 
 # Get top tracks with ranking
 top_tracks = (df_filtered
               .dropna(subset=['master_metadata_track_name', 'master_metadata_album_artist_name'])
               .groupby(['master_metadata_track_name', 'master_metadata_album_artist_name'])['hours_played']
               .sum()
-              .nlargest(100)
+              .nlargest(250)
               .reset_index()
               .sort_values('hours_played', ascending=False))
 
