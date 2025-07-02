@@ -7,7 +7,8 @@ import json
 # Load Data
 # My listening history from Spotify
 #Wed  2 Jul 2025 11:15:37 AEST
-json_dir = '/Users/roberto/OneDrive/Azure/Spotify/MyData2' 
+# from Onedrive to local storage
+json_dir = 'data/' 
 dataframes = []
 
 for file in os.listdir(json_dir):
