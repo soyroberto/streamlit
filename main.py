@@ -188,6 +188,7 @@ st.dataframe(
     hide_index=True,
     use_container_width=True,
     height=min(800, 35 * len(top_tracks))  # Dynamic height
+)
 
 # Add download button
 csv = top_tracks.to_csv(index=False).encode('utf-8')
