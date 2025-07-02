@@ -57,7 +57,7 @@ df_filtered = df[df['ts'].dt.year.isin(year_filter)]
 num_artists = st.sidebar.slider(
     "Number of Artists to Display",
     min_value=5,
-    max_value=500,  # Increased max value to 500
+    max_value=10894,
     value=25,
     step=5
 )
@@ -71,9 +71,13 @@ top_artists = (df_filtered
                .groupby("master_metadata_album_artist_name")['hours_played']
                .sum()
                .nlargest(num_artists)
-               .reset_index())
+               .reset_index()
+               .sort_values('hours_played', ascending=True))  # Sort ascending for proper chart order
 
-# Create interactive plot
+# Add rank column (1st, 2nd, 3rd...)
+top_artists['rank'] = range(1, len(top_artists) + 1)
+
+# Create interactive plot with ranking
 fig = px.bar(
     top_artists, 
     x='hours_played', 
@@ -82,21 +86,35 @@ fig = px.bar(
     title=f"Top {len(top_artists)} Artists by Total Hours Played",
     labels={
         'master_metadata_album_artist_name': 'Artist',
-        'hours_played': 'Hours Played'
+        'hours_played': 'Hours Played',
+        'rank': 'Rank'
     },
+    hover_data={'rank': True, 'hours_played': ':.1f'},
     height=max(600, 30 * len(top_artists)),
     color='hours_played',
     color_continuous_scale='viridis'
 )
 
+# Format y-axis labels to show rankings
+fig.update_yaxes(
+    ticktext=[f"#{i} - {artist}" for i, artist in 
+             zip(top_artists['rank'], top_artists['master_metadata_album_artist_name'])],
+    tickvals=top_artists['master_metadata_album_artist_name'],
+    title=None
+)
+
+# Improve tooltips
+fig.update_traces(
+    hovertemplate="<b>%{y}</b><br>Rank: #%{customdata[0]}<br>Hours Played: %{x:.1f}<extra></extra>"
+)
+
 # Enhanced layout
 fig.update_layout(
-    margin=dict(l=150, r=50, t=80, b=50),
+    margin=dict(l=180, r=50, t=80, b=50),  # Increased left margin for longer labels
     yaxis={'categoryorder': 'total ascending'},
     hovermode='y',
     plot_bgcolor='rgba(0,0,0,0)',
-    xaxis_title="Hours Played",
-    yaxis_title=""
+    xaxis_title="Hours Played"
 )
 
 # Add some metrics
