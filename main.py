@@ -4,112 +4,156 @@ import plotly.express as px
 import os
 import json
 
-# Load Data
-json_dir = 'data/' 
-dataframes = []
+# Load Data with caching
+@st.cache_data
+def load_data():
+    json_dir = 'data/' 
+    dataframes = []
 
-# Create data directory if doesn't exist
-if not os.path.exists(json_dir):
-    os.makedirs(json_dir)
-    st.warning(f"Created missing directory: {json_dir}")
+    # Create data directory if doesn't exist
+    if not os.path.exists(json_dir):
+        os.makedirs(json_dir)
+        st.warning(f"Created missing directory: {json_dir}")
 
-# Check if directory is empty
-if not os.listdir(json_dir):
-    st.error(f"No JSON files found in {json_dir}")
-    st.stop()  # Halt the app if no data
+    # Check if directory is empty
+    if not os.listdir(json_dir):
+        st.error(f"No JSON files found in {json_dir}")
+        st.stop()  # Halt the app if no data
 
-for file in os.listdir(json_dir):
-    if file.endswith('.json'):
-        try:
-            with open(os.path.join(json_dir, file), 'r') as f:
-                data = json.load(f)
-                dataframes.append(pd.DataFrame(data))
-        except Exception as e:
-            st.warning(f"Error loading {file}: {str(e)}")
+    for file in os.listdir(json_dir):
+        if file.endswith('.json'):
+            try:
+                with open(os.path.join(json_dir, file), 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    dataframes.append(pd.DataFrame(data))
+            except Exception as e:
+                st.warning(f"Error loading {file}: {str(e)}")
+    
+    if not dataframes:
+        st.error("No valid data loaded")
+        st.stop()
+    
+    df = pd.concat(dataframes, ignore_index=True)
+    df['ts'] = pd.to_datetime(df['ts'])
+    df['hours_played'] = df['ms_played'] / 3600000
+    return df
 
-df = pd.concat(dataframes, ignore_index=True)
-df['ts'] = pd.to_datetime(df['ts'])
-df['hours_played'] = df['ms_played'] / 3600000
+df = load_data()
 
 # Streamlit App
-st.title("🎵 Spotify Streaming History Dashboard")
+st.title("🎵 Spotify Streaming History Dashboard (2013-2023)")
 st.sidebar.header("Filters")
 
 # Filter by Year
+years = sorted(df['ts'].dt.year.unique(), reverse=True)
 year_filter = st.sidebar.multiselect(
-    "Select Year", 
-    df['ts'].dt.year.unique(), 
-    default=df['ts'].dt.year.unique()
+    "Select Year(s)", 
+    years,
+    default=years
 )
 df_filtered = df[df['ts'].dt.year.isin(year_filter)]
 
-# Top Artists Chart - IMPROVED VERSION
-st.subheader("Top All time 2013-2023 Artists Analysis")
+# Add number of artists selector
+num_artists = st.sidebar.slider(
+    "Number of Artists to Display",
+    min_value=5,
+    max_value=100,
+    value=25,
+    step=5
+)
 
-# First ensure we have clean data
+# Top Artists Analysis
+st.subheader(f"Top Artists Analysis ({min(num_artists, len(df_filtered))} shown)")
+
+# Clean and prepare data
 df_filtered = df_filtered.dropna(subset=['master_metadata_album_artist_name'])
-
-# Get top artists with better handling
-top_artists = (df_filtered.groupby("master_metadata_album_artist_name", dropna=False)['hours_played']
+top_artists = (df_filtered
+               .groupby("master_metadata_album_artist_name")['hours_played']
                .sum()
-               .sort_values(ascending=False)
+               .nlargest(num_artists)
                .reset_index())
 
-# Show how many unique artists we actually have
-st.sidebar.markdown(f"**Unique artists in selection:** {len(top_artists)}")
-
-# Create visualization with all available artists (up to 25)
-show_n = min(100, len(top_artists))  # Show n or whatever's available
-top_artists = top_artists.head(show_n)
-
-# Create the plot with improved layout
-fig = px.bar(top_artists, 
-             x='hours_played', 
-             y='master_metadata_album_artist_name',
-             orientation='h',
-             title=f"Top {show_n} Artists (Total Hours Played)",
-             labels={
-                 'master_metadata_album_artist_name': 'Artist',
-                 'hours_played': 'Hours Played'
-             },
-             height=max(600, 50 * show_n))  # Dynamic height
-
-# Improve layout
-fig.update_layout(
-    margin=dict(l=150, r=50, t=50, b=50),  # Adjust margins
-    yaxis={'categoryorder':'total ascending'},
-    hovermode='y'
+# Create interactive plot
+fig = px.bar(
+    top_artists, 
+    x='hours_played', 
+    y='master_metadata_album_artist_name',
+    orientation='h',
+    title=f"Top {len(top_artists)} Artists by Total Hours Played",
+    labels={
+        'master_metadata_album_artist_name': 'Artist',
+        'hours_played': 'Hours Played'
+    },
+    height=max(600, 30 * len(top_artists)),
+    color='hours_played',
+    color_continuous_scale='viridis'
 )
+
+# Enhanced layout
+fig.update_layout(
+    margin=dict(l=150, r=50, t=80, b=50),
+    yaxis={'categoryorder': 'total ascending'},
+    hovermode='y',
+    plot_bgcolor='rgba(0,0,0,0)',
+    xaxis_title="Hours Played",
+    yaxis_title=""
+)
+
+# Add some metrics
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Artists", df['master_metadata_album_artist_name'].nunique())
+col2.metric("Total Plays", len(df))
+col3.metric("Total Hours", f"{df['hours_played'].sum():.1f}")
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Debug info (can be commented out)
-with st.expander("Data Debug Info"):
-    st.write(f"Total unique artists in full dataset: {df['master_metadata_album_artist_name'].nunique()}")
-    st.write(f"Filtered dataset contains {len(df_filtered)} plays")
-    st.write("Sample of filtered data:", df_filtered.head(3))
-
-# Heatmap of Listening Patterns
+# Listening Patterns Heatmap
 st.subheader("Listening Patterns Heatmap")
+
+# Prepare heatmap data
 df_filtered['hour'] = df_filtered['ts'].dt.hour
 df_filtered['day_of_week'] = df_filtered['ts'].dt.day_name()
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+df_filtered['day_of_week'] = pd.Categorical(df_filtered['day_of_week'], categories=day_order, ordered=True)
+
 heatmap_data = df_filtered.pivot_table(
     index='day_of_week', 
     columns='hour', 
     values='hours_played', 
-    aggfunc='sum'
+    aggfunc='sum',
+    fill_value=0
 )
 
-# Order days of week properly
-day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-heatmap_data = heatmap_data.reindex(day_order)
+# Create interactive heatmap
+heatmap_fig = px.imshow(
+    heatmap_data,
+    color_continuous_scale='viridis',
+    labels={'x': 'Hour of Day', 'y': 'Day of Week', 'color': 'Hours Played'},
+    title='Listening Activity by Day and Hour',
+    aspect='auto'
+)
 
-st.plotly_chart(
-    px.imshow(
-        heatmap_data, 
-        color_continuous_scale='viridis',
-        labels={'color': 'Hours Played'},
-        title='Listening Activity by Day and Hour'
-    ),
+heatmap_fig.update_layout(
+    xaxis_title="Hour of Day (0-23)",
+    yaxis_title="Day of Week"
+)
+
+st.plotly_chart(heatmap_fig, use_container_width=True)
+
+# Additional Analysis: Top Tracks
+st.subheader("Top Tracks Analysis")
+top_tracks = (df_filtered
+              .groupby(['master_metadata_track_name', 'master_metadata_album_artist_name'])['hours_played']
+              .sum()
+              .nlargest(20)
+              .reset_index())
+
+top_tracks.columns = ['Track', 'Artist', 'Hours Played']
+st.dataframe(
+    top_tracks.style.format({'Hours Played': '{:.1f}'}),
     use_container_width=True
 )
+
+# Raw data explorer
+with st.expander("Explore Raw Data"):
+    st.dataframe(df_filtered.sort_values('ts', ascending=False), use_container_width=True)
