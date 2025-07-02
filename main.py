@@ -59,7 +59,7 @@ top_artists = (df_filtered.groupby("master_metadata_album_artist_name", dropna=F
 st.sidebar.markdown(f"**Unique artists in selection:** {len(top_artists)}")
 
 # Create visualization with all available artists (up to 25)
-show_n = min(25, len(top_artists))  # Show 25 or whatever's available
+show_n = min(40, len(top_artists))  # Show 25 or whatever's available
 top_artists = top_artists.head(show_n)
 
 # Create the plot with improved layout
