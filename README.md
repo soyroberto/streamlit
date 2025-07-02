@@ -7,5 +7,5 @@ Using my Spotify listening data I created these Graphics, each year has a most l
 ### 
 I have other repo for more visualizations using python:[text] (https://github.com/soyroberto/spotify)
 
-![image1] (Screenshot 2025-07-02 at 15.50.17.png)
-![image2] (Screenshot 2025-07-02 at 15.50.33.png)
+![image1](Screenshot 2025-07-02 at 15.50.17.png)
+![image2](Screenshot 2025-07-02 at 15.50.33.png)
