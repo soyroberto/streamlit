@@ -1,0 +1,6 @@
+#not going to GIT
+.DS_STORE
+*.log
+secrets.txt
+venv/
+
