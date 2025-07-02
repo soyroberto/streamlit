@@ -57,7 +57,7 @@ df_filtered = df[df['ts'].dt.year.isin(year_filter)]
 num_artists = st.sidebar.slider(
     "Number of Artists to Display",
     min_value=5,
-    max_value=10894,
+    max_value=500,
     value=25,
     step=5
 )
