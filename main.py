@@ -44,7 +44,7 @@ year_filter = st.sidebar.multiselect(
 df_filtered = df[df['ts'].dt.year.isin(year_filter)]
 
 # Top Artists Chart - IMPROVED VERSION
-st.subheader("Top Artists Analysis")
+st.subheader("Top All time 2013-2023 Artists Analysis")
 
 # First ensure we have clean data
 df_filtered = df_filtered.dropna(subset=['master_metadata_album_artist_name'])
@@ -59,7 +59,7 @@ top_artists = (df_filtered.groupby("master_metadata_album_artist_name", dropna=F
 st.sidebar.markdown(f"**Unique artists in selection:** {len(top_artists)}")
 
 # Create visualization with all available artists (up to 25)
-show_n = min(100, len(top_artists))  # Show 25 or whatever's available
+show_n = min(100, len(top_artists))  # Show n or whatever's available
 top_artists = top_artists.head(show_n)
 
 # Create the plot with improved layout
