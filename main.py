@@ -72,7 +72,7 @@ top_artists = (df_filtered
                .sum()
                .nlargest(num_artists)
                .reset_index()
-               .sort_values('hours_played', ascending=False))  # Sort ascending for proper chart order
+               .sort_values('hours_played', ascending=True))  # Sort ascending for proper chart order
 
 # Add rank column (1st, 2nd, 3rd...)
 top_artists['rank'] = range(1, len(top_artists) + 1)
@@ -158,18 +158,44 @@ heatmap_fig.update_layout(
 
 st.plotly_chart(heatmap_fig, use_container_width=True)
 
-# Additional Analysis: Top Tracks
-st.subheader("Top Tracks Analysis")
+# Enhanced Top Tracks Analysis
+st.subheader(f"Top Tracks Analysis (Top {min(100, len(df_filtered))} Tracks)")
+
+# Get top tracks with ranking
 top_tracks = (df_filtered
+              .dropna(subset=['master_metadata_track_name', 'master_metadata_album_artist_name'])
               .groupby(['master_metadata_track_name', 'master_metadata_album_artist_name'])['hours_played']
               .sum()
               .nlargest(100)
-              .reset_index())
+              .reset_index()
+              .sort_values('hours_played', ascending=True))
 
-top_tracks.columns = ['Track', 'Artist', 'Hours Played']
+# Add rank column
+top_tracks.insert(0, 'Rank', range(1, len(top_tracks) + 1))
+
+# Format the display
 st.dataframe(
-    top_tracks.style.format({'Hours Played': '{:.1f}'}),
-    use_container_width=True
+    top_tracks.style.format({
+        'Hours Played': '{:.2f}',
+        'Rank': '{:.0f}'
+    }).bar(subset=['Hours Played'], color='#5fba7d'),
+    column_config={
+        'Rank': st.column_config.NumberColumn("Rank", width="small"),
+        'master_metadata_track_name': "Track Name",
+        'master_metadata_album_artist_name': "Artist",
+        'hours_played': st.column_config.NumberColumn("Hours Played", format="%.2f")
+    },
+    hide_index=True,
+    use_container_width=True,
+    height=min(800, 35 * len(top_tracks))  # Dynamic height
+
+# Add download button
+csv = top_tracks.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="Download Top Tracks Data",
+    data=csv,
+    file_name='spotify_top_tracks.csv',
+    mime='text/csv'
 )
 
 # Raw data explorer
