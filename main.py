@@ -72,7 +72,7 @@ top_artists = (df_filtered
                .sum()
                .nlargest(num_artists)
                .reset_index()
-               .sort_values('hours_played', ascending=True))  # Sort ascending for proper chart order
+               .sort_values('hours_played', ascending=False))  # Sort ascending for proper chart order
 
 # Add rank column (1st, 2nd, 3rd...)
 top_artists['rank'] = range(1, len(top_artists) + 1)
@@ -157,8 +157,8 @@ heatmap_fig.update_layout(
 )
 
 st.plotly_chart(heatmap_fig, use_container_width=True)
-
-# Enhanced Top Tracks Analysis
+### modifications
+# Enhanced Top Tracks Analysis - Fixed Version
 st.subheader(f"Top Tracks Analysis (Top {min(100, len(df_filtered))} Tracks)")
 
 # Get top tracks with ranking
@@ -168,7 +168,14 @@ top_tracks = (df_filtered
               .sum()
               .nlargest(100)
               .reset_index()
-              .sort_values('hours_played', ascending=True))
+              .sort_values('hours_played', ascending=False))
+
+# Rename columns for display
+top_tracks = top_tracks.rename(columns={
+    'master_metadata_track_name': 'Track',
+    'master_metadata_album_artist_name': 'Artist',
+    'hours_played': 'Hours Played'
+})
 
 # Add rank column
 top_tracks.insert(0, 'Rank', range(1, len(top_tracks) + 1))
@@ -181,9 +188,9 @@ st.dataframe(
     }).bar(subset=['Hours Played'], color='#5fba7d'),
     column_config={
         'Rank': st.column_config.NumberColumn("Rank", width="small"),
-        'master_metadata_track_name': "Track Name",
-        'master_metadata_album_artist_name': "Artist",
-        'hours_played': st.column_config.NumberColumn("Hours Played", format="%.2f")
+        'Track': "Track Name",
+        'Artist': "Artist",
+        'Hours Played': st.column_config.NumberColumn("Hours Played", format="%.2f")
     },
     hide_index=True,
     use_container_width=True,
