@@ -5,6 +5,7 @@ import os
 import json
 #to run streamlit run gapp.py
 # Load Data
+# My listening history from Spotify
 json_dir = '/Users/roberto/OneDrive/Azure/Spotify/MyData2' 
 dataframes = []
 
