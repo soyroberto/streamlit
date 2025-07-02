@@ -72,7 +72,7 @@ top_artists = (df_filtered
                .sum()
                .nlargest(num_artists)
                .reset_index()
-               .sort_values('hours_played', ascending=True))  # Sort ascending for proper chart order
+               .sort_values('hours_played', ascending=False))  # Sort ascending for proper chart order
 
 # Add rank column (1st, 2nd, 3rd...)
 top_artists['rank'] = range(1, len(top_artists) + 1)
