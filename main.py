@@ -163,7 +163,7 @@ st.subheader("Top Tracks Analysis")
 top_tracks = (df_filtered
               .groupby(['master_metadata_track_name', 'master_metadata_album_artist_name'])['hours_played']
               .sum()
-              .nlargest(20)
+              .nlargest(100)
               .reset_index())
 
 top_tracks.columns = ['Track', 'Artist', 'Hours Played']
