@@ -125,41 +125,7 @@ col3.metric("Total Hours", f"{df['hours_played'].sum():.1f}")
 
 st.plotly_chart(fig, use_container_width=True)
 
-# Listening Patterns Heatmap
-st.subheader("Listening Patterns Heatmap")
-
-# Prepare heatmap data
-df_filtered['hour'] = df_filtered['ts'].dt.hour
-df_filtered['day_of_week'] = df_filtered['ts'].dt.day_name()
-day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-df_filtered['day_of_week'] = pd.Categorical(df_filtered['day_of_week'], categories=day_order, ordered=True)
-
-heatmap_data = df_filtered.pivot_table(
-    index='day_of_week', 
-    columns='hour', 
-    values='hours_played', 
-    aggfunc='sum',
-    fill_value=0
-)
-
-# Create interactive heatmap
-heatmap_fig = px.imshow(
-    heatmap_data,
-    color_continuous_scale='viridis',
-    labels={'x': 'Hour of Day', 'y': 'Day of Week', 'color': 'Hours Played'},
-    title='Listening Activity by Day and Hour',
-    aspect='auto'
-)
-
-heatmap_fig.update_layout(
-    xaxis_title="Hour of Day (0-23)",
-    yaxis_title="Day of Week"
-)
-
-st.plotly_chart(heatmap_fig, use_container_width=True)
-### modifications
-# Enhanced Top Tracks Analysis - Fixed Version
-st.subheader(f"Top Tracks Analysis (Top {min(250, len(df_filtered))} Tracks)")
+# moved heatpmap to the bottom 
 
 # Get top tracks with ranking
 top_tracks = (df_filtered
@@ -205,6 +171,42 @@ st.download_button(
     file_name='spotify_top_tracks.csv',
     mime='text/csv'
 )
+
+# Listening Patterns Heatmap
+st.subheader("Listening Patterns Heatmap")
+
+# Prepare heatmap data
+df_filtered['hour'] = df_filtered['ts'].dt.hour
+df_filtered['day_of_week'] = df_filtered['ts'].dt.day_name()
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+df_filtered['day_of_week'] = pd.Categorical(df_filtered['day_of_week'], categories=day_order, ordered=True)
+
+heatmap_data = df_filtered.pivot_table(
+    index='day_of_week', 
+    columns='hour', 
+    values='hours_played', 
+    aggfunc='sum',
+    fill_value=0
+)
+
+# Create interactive heatmap
+heatmap_fig = px.imshow(
+    heatmap_data,
+    color_continuous_scale='viridis',
+    labels={'x': 'Hour of Day', 'y': 'Day of Week', 'color': 'Hours Played'},
+    title='Listening Activity by Day and Hour',
+    aspect='auto'
+)
+
+heatmap_fig.update_layout(
+    xaxis_title="Hour of Day (0-23)",
+    yaxis_title="Day of Week"
+)
+
+st.plotly_chart(heatmap_fig, use_container_width=True)
+### modifications
+# Enhanced Top Tracks Analysis - Fixed Version
+st.subheader(f"Top Tracks Analysis (Top {min(250, len(df_filtered))} Tracks)")
 
 # Raw data explorer
 with st.expander("Explore Raw Data"):
