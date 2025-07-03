@@ -126,13 +126,13 @@ col3.metric("Total Hours", f"{df['hours_played'].sum():.1f}")
 st.plotly_chart(fig, use_container_width=True)
 
 # moved heatpmap to the bottom 
-
+st.subheader(f"Top Tracks Analysis (Top {min(10894, len(df_filtered))} Tracks)")
 # Get top tracks with ranking
 top_tracks = (df_filtered
               .dropna(subset=['master_metadata_track_name', 'master_metadata_album_artist_name'])
               .groupby(['master_metadata_track_name', 'master_metadata_album_artist_name'])['hours_played']
               .sum()
-              .nlargest(250)
+              .nlargest(10894)
               .reset_index()
               .sort_values('hours_played', ascending=False))
 
@@ -206,7 +206,7 @@ heatmap_fig.update_layout(
 st.plotly_chart(heatmap_fig, use_container_width=True)
 ### modifications
 # Enhanced Top Tracks Analysis - Fixed Version
-st.subheader(f"Top Tracks Analysis (Top {min(250, len(df_filtered))} Tracks)")
+
 
 # Raw data explorer
 with st.expander("Explore Raw Data"):
