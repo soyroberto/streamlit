@@ -126,7 +126,7 @@ col3.metric("Total Hours", f"{df['hours_played'].sum():.1f}")
 st.plotly_chart(fig, use_container_width=True)
 
 # moved heatpmap to the bottom 
-st.subheader(f"Top Tracks Analysis (Top {min(10894, len(df_filtered))} Tracks)")
+st.subheader(f"All Tracks Analysis ({min(10894, len(df_filtered))} Tracks)")
 # Get top tracks with ranking
 top_tracks = (df_filtered
               .dropna(subset=['master_metadata_track_name', 'master_metadata_album_artist_name'])
