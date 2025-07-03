@@ -211,3 +211,10 @@ st.plotly_chart(heatmap_fig, use_container_width=True)
 # Raw data explorer
 with st.expander("Explore Raw Data"):
     st.dataframe(df_filtered.sort_values('ts', ascending=False), use_container_width=True)
+
+st.subheader("Roberto's Spotify Dashboard")
+st.markdown("This dashboard is built with Streamlit and Plotly, showcasing my Spotify streaming history from 2013 to 2023.")
+st.markdown("**Data Source**: Spotify's streaming history JSON files")
+st.markdown("**Technologies**: Streamlit, Plotly, Pandas") 
+st.markdown("GitHub**:https://github.com/soyroberto/streamlit")
+               
